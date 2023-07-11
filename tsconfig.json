@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "build",
+    "target": "ES5",
+    "moduleResolution": "Node",
+    "jsx": "react",
+    "strict": true,
+    "baseUrl": ".",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["es2015", "dom"],
+    "typeRoots": ["./types", "./node_modules/@types"]
+  },
+  "include": [
+    "./src/*.tsx",
+    "types"
+  ],
+  "exclude": ["node_modules", "build"]
+}
