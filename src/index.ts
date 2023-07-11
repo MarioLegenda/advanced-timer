@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useInterval({
+export default function useInterval({
 	onInterval,
 	onQuit,
 	onStop,

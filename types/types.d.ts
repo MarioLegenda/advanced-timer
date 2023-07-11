@@ -4,7 +4,7 @@ interface UseInterval {
 	stop: boolean;
 	quit: boolean;
 	restart: boolean;
-	onInterval();
-	onQuit();
-	onStop();
+	onInterval(): void;
+	onQuit(): void;
+	onStop(): void;
 }
