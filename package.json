@@ -1,6 +1,7 @@
 {
   "name": "advanced-timer",
   "version": "1.0.0",
+  "license": "MIT",
   "main": "build/index.js",
   "scripts": {
     "build": "rollup -c --bundleConfigAsCjs",
