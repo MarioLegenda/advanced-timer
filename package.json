@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c --bundleConfigAsCjs",
     "test": "NODE_ENV=test jest tests/",
-    "coverage": "jest --coverage"
+    "coverage": "NODE_ENV=test jest tests/ --coverage"
   },
   "files": [
     "build"
