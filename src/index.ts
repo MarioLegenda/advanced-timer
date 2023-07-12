@@ -26,13 +26,19 @@ export default function useAdvancedInterval({
 	const numOfExits = useRef(0);
 	const totalTicks = useRef(0);
 
-	const [numOfRepeats, setNumOfRepeats] = useState<number>(0);
+	const numOfRepeatsRef = useRef(0);
 
 	const startInterval = useCallback(() => {
 		subscriberRef.current = setInterval(() => {
 			sendAsync(onTick);
-			setNumOfRepeats((num) => num + 1);
+			numOfRepeatsRef.current = numOfRepeatsRef.current + 1;
 			totalTicks.current = totalTicks.current + 1;
+
+			if (numOfRepeatsRef.current === maxTicksRef.current) {
+				sendAsync(onElapsed);
+				numOfElapsed.current = numOfElapsed.current + 1;
+				restart(false);
+			}
 		}, intervalRef.current);
 	}, []);
 
@@ -47,18 +53,18 @@ export default function useAdvancedInterval({
 		if (subscriberRef.current) {
 			clearInterval(subscriberRef.current);
 			subscriberRef.current = null;
-			setNumOfRepeats(0);
-
-			numOfExits.current = numOfExits.current + 1;
+			numOfRepeatsRef.current = 0;
 		}
 
+		numOfExits.current = numOfExits.current + 1;
+
 		sendAsync(onExit);
-	}, [subscriberRef.current]);
+	}, [subscriberRef.current, numOfExits.current]);
 
 	const restart = useCallback((callOnRestart?: boolean) => {
 		if (subscriberRef.current) clearInterval(subscriberRef.current);
 
-		setNumOfRepeats(0);
+		numOfRepeatsRef.current = 0;
 
 		startInterval();
 
@@ -75,7 +81,7 @@ export default function useAdvancedInterval({
 		maxTicksRef.current = maxTicks;
 	}, [subscriberRef.current]);
 
-	const sendAsync = useCallback(async (fn: VoidFn) => fn(), []);
+	const sendAsync = useCallback(async (fn?: VoidFn) => fn?.(), []);
 
 	/**
 	 * Start the initial interval. Only called once. All subsequent timers should be created trough
@@ -84,16 +90,6 @@ export default function useAdvancedInterval({
 	useEffect(() => {
 		startInterval();
 	}, []);
-
-	useEffect(() => {
-		if (numOfRepeats === maxTicksRef.current) {
-			if (subscriberRef.current) {
-				sendAsync(onElapsed);
-				restart(false);
-				numOfElapsed.current = numOfElapsed.current + 1;
-			}
-		}
-	}, [numOfRepeats, restart]);
 
 	/**
 	 * On startup, just in case, clear subscribing interval if an interval is running so we

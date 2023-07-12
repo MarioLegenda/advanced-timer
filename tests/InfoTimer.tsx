@@ -1,26 +1,25 @@
-import React from 'react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import React, {useState} from 'react';
+// eslint-disable-next-line no-restricted-imports
 import useAdvancedInterval from '../src';
 
 export default function InfoTimer() {
+	const [numOfElapsed, setNumOfElapsed] = useState(0);
+
 	const [exit,,, info] = useAdvancedInterval({
-		onTick() {
-			// skip
-		},
 		onElapsed() {
+			setNumOfElapsed(num => num + 1);
 			exit();
-			// skip
-		},
-		onExit() {
-			// skip
-		},
-		onRestart() {
-			// skip
 		},
 		maxTicks: 5,
-		interval: 1000,
+		interval: 100,
 	});
 
 	return <div>
 		<p id="ticks">{info().totalTicks}</p>
+		<p id="elapsed">{numOfElapsed}</p>
+		<p id="exit">{info().numOfExits}</p>
+		<p id="restarts">{info().numOfRestarts}</p>
 	</div>;
 };
