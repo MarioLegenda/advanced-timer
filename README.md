@@ -31,10 +31,10 @@ So how is this usable? Let's expand on this example.
 import useAdvancedInterval from 'advanced-interval';
 
 function Timer() {
-	useAdvancedInterval({
+    useAdvancedInterval({
         onTick() {
 			
-        },
+	},
         maxTicks: 5,
         interval: 1000,
     });
@@ -53,11 +53,11 @@ function Timer() {
 	const [count, setCount] = useState(0);
 	
 	useAdvancedInterval({
-		onTick() {
-            setCount(a => a + 1);
-		},
-		maxTicks: 5,
-		interval: 1000,
+	    onTick() {
+                setCount(a => a + 1);
+	    },
+	    maxTicks: 5,
+	    interval: 1000,
 	});
 	
 	return <p>{count}</p>;
@@ -75,15 +75,15 @@ function Timer() {
 	const [count, setCount] = useState(0);
 	
 	useAdvancedInterval({
-        onElapsed() {
-			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
-			setCount(0);
-        },
-		onTick() {
-            setCount(a => a + 1);
-		},
-		maxTicks: 5,
-		interval: 1000,
+            onElapsed() {
+		console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
+		setCount(0);
+            },
+	    onTick() {
+               setCount(a => a + 1);
+	    },
+	    maxTicks: 5,
+	    interval: 1000,
 	});
 	
 	return <p>{count}</p>;
@@ -107,10 +107,10 @@ function Timer() {
 			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
 			setCount(0);
 		},
-        onExit() {
-		    // onExit is called when timer is finished. In this case after the callback
-            // to setTimeout() is called after ten seconds.      
-        },
+                onExit() {
+		        // onExit is called when timer is finished. In this case after the callback
+                        // to setTimeout() is called after ten seconds.      
+                },
 		onTick() {
 			setCount(a => a + 1);
 		},
@@ -119,8 +119,8 @@ function Timer() {
 	});
 
 	useEffect(() => {
-		setTimeout(() => {
-			exit();
+	setTimeout(() => {
+	    exit();
         }, 10000);
     }, [])
 
@@ -143,13 +143,13 @@ function Timer() {
 			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
 			setCount(0);
 		},
-        onExit() {
-		    // onExit is called when timer is finished. In this case after the callback
-            // to setTimeout() is called after ten seconds.      
-        },
-        onRestart() {
+                onExit() {
+			// onExit is called when timer is finished. In this case after the callback
+                        // to setTimeout() is called after ten seconds.      
+                },
+                onRestart() {
 			// onRestart() is called when restart() function is called. 
-        },
+                },
 		onTick() {
 			setCount(a => a + 1);
 		},
@@ -158,12 +158,12 @@ function Timer() {
 	});
 
 	useEffect(() => {
-		setTimeout(() => {
-			exit();
+	setTimeout(() => {
+		exit();
         }, 10000);
 		
-		setTimeout(() => {
-			restart();
+	setTimeout(() => {
+		restart();
         }, 12000)
     }, [])
 
@@ -174,3 +174,99 @@ function Timer() {
 This timer will stop working after ten seconds but will again start working after twelve seconds like nothing had happened. If you read the introduction
 and the example I had, when the user answered the question for example, two seconds before the timer elapsed, I would load the new question and
 restart the timer again in the same component. 
+
+## Reseting parameters
+
+But what if you want to change the interval in the middle of a running timer? You can do that like this:
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+
+	const [exit, restart, updateProps] = useAdvancedInterval({
+		onElapsed() {
+		    setCount(0);
+		},
+		onTick() {
+		    setCount(a => a + 1);
+		},
+		maxTicks: 5,
+		interval: 1000,
+	});
+	
+	useEffect(() => {
+		setTimeout(() => {
+			/**
+                        * After five seconds, exit the current time, update maxTicks and interval and start the timer again.
+			 */
+		exit();
+		updateProps(100, 2);
+		restart();
+        }, 5000);
+    }, []);
+
+	return <p>{count}</p>;
+}
+````
+
+In the above example, after five seconds, we reset the timer to run every 100 milliseconds with elapsed time (`maxTicks`) every two ticks and the
+timer continues with these parameters. That means that if the UI changed (user changed some UI parameters), you can change the timer on the fly without
+re-rendering the underlying component or any other techniques. **It is important to ``exit()`` the timer before updating props since timer cannot be 
+updated on the fly.** 
+
+## Timer info
+
+You can access the info of the timer with the ``info()`` function that is returned from the hook.
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+
+	const [info] = useAdvancedInterval({
+            onTick() {
+		console.log(info());
+            },
+	    maxTicks: 5, 
+            interval: 1000,
+	});
+
+	return <p>{count}</p>;
+}
+````
+
+``info()`` function returns the current state of the timer as follows:
+
+- totalTicks (int): How many times the interval has ran. In the above example, this will increase with every tick. 
+- numOfRestarts (int): How many restarts there were for this timer? A restart increments when you call the ``restart()`` function.
+- numOfElapsed (int): How many elapsed timers where there? In the above example, `maxTicks` is five, therefor after 15 seconds, this value
+will be three. 
+- numOfExits (int): How many times the timer was stopped? This value increments every time you call the `exit()` function
+
+It is very important to know that the information about the timer is cumulative. That means it never resets even after you call `exit()`, `restart()`
+or `updateProps()`. It is counted and collected for the duration of the underlying component and for the duration of the browser session. If the component
+is unmounted or the user refreshes the page, only then is the info reseted to its initial state.
+
+# API
+
+````typescript
+interface UseAdvancedInterval {
+	maxTicks: number;
+	interval: number;
+	onTick?(): void;
+	onExit?(): void;
+	onElapsed?(): void;
+	onRestart?(): void;
+}
+
+type VoidFn = () => void;
+type InfoFn = () => TimerInfo;
+type UpdatePropsFn = (interval: number, maxTicks: number) => void;
+````
+
+``useAdvancedInterval(options: UseAdvancedInterval): [VoidFn, VoidFn, UpdatePropsFn, InfoFn]``
