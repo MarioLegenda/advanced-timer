@@ -1,17 +1,18 @@
 {
   "name": "advanced-react-timer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Advanced timer functionality for React apps",
   "license": "MIT",
   "repository": {
     "url": "https://github.com/MarioLegenda/advanced-timer"
   },
+  "types": "./index.d.ts",
+  "main": "build/index.js",
   "keywords": ["timer", "react", "interval"],
   "author": {
     "email": "marioskrlec222@gmail.com",
     "name": "Mario Škrlec"
   },
-  "main": "build/index.js",
   "scripts": {
     "build": "rollup -c --bundleConfigAsCjs",
     "test": "NODE_ENV=test jest tests/",
