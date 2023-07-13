@@ -252,11 +252,11 @@ function Timer() {
 
 ``info()`` function returns the current state of the timer as follows:
 
-- totalTicks (int): How many times the interval has ran. In the above example, this will increase with every tick. 
-- numOfRestarts (int): How many restarts there were for this timer? A restart increments when you call the ``restart()`` function.
-- numOfElapsed (int): How many elapsed timers where there? In the above example, `maxTicks` is five, therefor after 15 seconds, this value
+- **totalTicks (int)**: How many times the interval has ran. In the above example, this will increase with every tick. 
+- **numOfRestarts (int)**: How many restarts there were for this timer? A restart increments when you call the ``restart()`` function.
+- **numOfElapsed (int)**: How many elapsed timers where there? In the above example, `maxTicks` is five, therefor after 15 seconds, this value
 will be three. 
-- numOfExits (int): How many times the timer was stopped? This value increments every time you call the `exit()` function
+- **numOfExits (int)**: How many times the timer was stopped? This value increments every time you call the `exit()` function
 
 It is very important to know that the information about the timer is cumulative. That means it never resets even after you call `exit()`, `restart()`
 or `updateProps()`. It is counted and collected for the duration of the underlying component and for the duration of the browser session. If the component
@@ -272,6 +272,13 @@ interface UseAdvancedTimer {
 	onExit?(): void;
 	onElapsed?(): void;
 	onRestart?(): void;
+}
+
+interface TimerInfo {
+	totalTicks: number;
+	numOfRestarts: number;
+	numOfElapsed: number;
+	numOfExits: number;
 }
 
 type VoidFn = () => void;
