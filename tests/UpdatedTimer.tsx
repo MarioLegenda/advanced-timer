@@ -2,7 +2,7 @@
 // @ts-ignore
 import React, {useEffect, useState} from 'react';
 // eslint-disable-next-line no-restricted-imports
-import useAdvancedInterval from '../src';
+import useAdvancedTimer from '../src';
 
 export default function UpdatedTimer() {
 	const [exitCalled, setExitCalled] = useState(false);
@@ -10,7 +10,7 @@ export default function UpdatedTimer() {
 
 	const [numOfElapsed, setNumOfElapsed] = useState(0);
 
-	const [exit, restart, updateProps, info] = useAdvancedInterval({
+	const [exit, restart, updateProps, info] = useAdvancedTimer({
 		onExit() {
 			setExitCalled(true);
 		},

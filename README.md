@@ -13,10 +13,10 @@ readable and maintainable way without the dangers of too many renders or forgett
 # Usage
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 
 function Timer() {
-	useAdvancedInterval({
+	useAdvancedTimer({
         maxTicks: 5,
         interval: 1000,
     });
@@ -28,10 +28,10 @@ only once and will not render for every elapsed timer (for every second). For no
 So how is this usable? Let's expand on this example.
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 
 function Timer() {
-    useAdvancedInterval({
+    useAdvancedTimer({
         onTick() {
 			
 	},
@@ -46,13 +46,13 @@ you want to do with this callback. It is up to you what you do with this informa
 the counter ran, you can:
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 	
-	useAdvancedInterval({
+	useAdvancedTimer({
 	    onTick() {
                 setCount(a => a + 1);
 	    },
@@ -68,13 +68,13 @@ But what is this ``maxTicks`` option? This option says that the timer will tread
 repeats. It the example above, that is every five seconds (5000 milliseconds). We can use this with the `onElapsed` callback.
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 	
-	useAdvancedInterval({
+	useAdvancedTimer({
             onElapsed() {
 		console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
 		setCount(0);
@@ -96,13 +96,13 @@ example above, `Timer` is only rendered when `setState` is called, not for the '
 If you want to stop the timer, you can use the `exit` return argument:
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 
-	const [exit] = useAdvancedInterval({
+	const [exit] = useAdvancedTimer({
 		onElapsed() {
 			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
 			setCount(0);
@@ -132,13 +132,13 @@ Above timer will stop after ten seconds and you can react to it in the `onExit` 
 run the timer even after you exit, you can ``restart`` it.
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 
-	const [exit, restart] = useAdvancedInterval({
+	const [exit, restart] = useAdvancedTimer({
 		onElapsed() {
 			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
 			setCount(0);
@@ -180,13 +180,13 @@ restart the timer again in the same component.
 But what if you want to change the interval in the middle of a running timer? You can do that like this:
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 
-	const [exit, restart, updateProps] = useAdvancedInterval({
+	const [exit, restart, updateProps] = useAdvancedTimer({
 		onElapsed() {
 		    setCount(0);
 		},
@@ -222,13 +222,13 @@ updated on the fly.**
 You can access the info of the timer with the ``info()`` function that is returned from the hook.
 
 ````typescript jsx
-import useAdvancedInterval from 'advanced-interval';
+import useAdvancedTimer from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
 	const [count, setCount] = useState(0);
 
-	const [info] = useAdvancedInterval({
+	const [info] = useAdvancedTimer({
             onTick() {
 		console.log(info());
             },
@@ -255,7 +255,7 @@ is unmounted or the user refreshes the page, only then is the info reseted to it
 # API
 
 ````typescript
-interface UseAdvancedInterval {
+interface UseAdvancedTimer {
 	maxTicks: number;
 	interval: number;
 	onTick?(): void;
@@ -269,4 +269,4 @@ type InfoFn = () => TimerInfo;
 type UpdatePropsFn = (interval: number, maxTicks: number) => void;
 ````
 
-``useAdvancedInterval(options: UseAdvancedInterval): [VoidFn, VoidFn, UpdatePropsFn, InfoFn]``
+``useAdvancedTimer(options: useAdvancedTimer): [VoidFn, VoidFn, UpdatePropsFn, InfoFn]``

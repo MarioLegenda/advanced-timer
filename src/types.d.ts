@@ -1,4 +1,4 @@
-interface UseAdvancedInterval {
+interface UseAdvancedTimer {
 	maxTicks: number;
 	interval: number;
 	onTick?(): void;

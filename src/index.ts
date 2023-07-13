@@ -1,13 +1,13 @@
 import {useCallback, useEffect, useRef} from 'react';
 
-export default function useAdvancedInterval({
+export default function useAdvancedTimer({
 	onTick,
 	onExit,
 	onElapsed,
 	onRestart,
 	maxTicks,
 	interval,
-}: UseAdvancedInterval): [VoidFn, VoidFn, UpdatePropsFn, InfoFn] {
+}: UseAdvancedTimer): [VoidFn, VoidFn, UpdatePropsFn, InfoFn] {
 	/**
 	 * Used to store return value of setInterval() so that it can be cleared but immutable.
 	 */

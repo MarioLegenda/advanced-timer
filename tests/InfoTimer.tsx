@@ -2,12 +2,12 @@
 // @ts-ignore
 import React, {useState} from 'react';
 // eslint-disable-next-line no-restricted-imports
-import useAdvancedInterval from '../src';
+import useAdvancedTimer from '../src';
 
 export default function InfoTimer() {
 	const [numOfElapsed, setNumOfElapsed] = useState(0);
 
-	const [exit,,, info] = useAdvancedInterval({
+	const [exit,,, info] = useAdvancedTimer({
 		onElapsed() {
 			setNumOfElapsed(num => num + 1);
 			exit();

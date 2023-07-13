@@ -2,13 +2,13 @@
 // @ts-ignore
 import React, {useEffect, useState} from 'react';
 // eslint-disable-next-line no-restricted-imports
-import useAdvancedInterval from '../src';
+import useAdvancedTimer from '../src';
 
 export default function RestartTimer() {
 	const [exitCalled, setExitCalled] = useState(false);
 	const [restartCalled, setRestartCalled] = useState(false);
 
-	const [exit,restart,, info] = useAdvancedInterval({
+	const [exit,restart,, info] = useAdvancedTimer({
 		onExit() {
 			setExitCalled(true);
 		},
