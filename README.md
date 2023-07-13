@@ -10,6 +10,16 @@ not familiar with what this component should be doing what not know what was goi
 For that reason, I started working on a more generic solution and this package was created. It offers a way to control timers in an intuitive, 
 readable and maintainable way without the dangers of too many renders or forgetting to clear timers. 
 
+# Install
+
+`yarn add advanced-react-timer`
+or
+`npm install advanced-react-timer`
+
+and import
+
+``import useAdvancedTimer from 'advanced-react-timer``
+
 # Usage
 
 ````typescript jsx
