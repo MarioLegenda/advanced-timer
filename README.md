@@ -1,27 +1,176 @@
-Timer must be repeatable without user interaction. That means if a user puts a maxTicks of 5, after the elapsed time has ended, the timer should be restarted automatically.
+# Introduction
 
-If the user manually restarts the timer, the timer must return to the initial state but continue running.
+I was working on a quiz application. For every question, the user had five seconds (for example) to answer the question. The five second timer
+was shown in the UI and the user had a countdown to zero. If the user answered the question, the timer would stop and the next question
+would appear with the timer reseted to the initial value (five seconds in this example).
 
-If the user exists the timer, the timer must destroy all data related to it and return to initial state. If the user restarts the timer, the timer goes from the beginning like the exit never happened.
+When I started implementing this feature, it became a mush of setIterval(s) and setTimeout(s) and by looking at the code, someone that is
+not familiar with what this component should be doing what not know what was going on.
 
-Restart and quit should be done with callbacks returned from the hook, not state updates.
+For that reason, I started working on a more generic solution and this package was created. It offers a way to control timers in an intuitive, 
+readable and maintainable way without the dangers of too many renders or forgetting to clear timers. 
 
-All non function properties must be static and not subject to state updates from client code.
+# Usage
 
-Argument functions:
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
 
-onExit() -> called when timer is stopped and returned to its inital state.
-onTick() -> called on a single elapsed tick. For example, if interval is 1000 milliseconds, onTick will be called every 1000 milliseconds.
-onElapsed() -> called when a maxTicks has been reached. This function must return the hook to its initial state but repeat the timer again.
-onRestart() -> called when restart() is explicitly called from client code.
-Static properties:
+function Timer() {
+	useAdvancedInterval({
+        maxTicks: 5,
+        interval: 1000,
+    });
+}
+````
 
-maxTicks: int (immutable): Maximum number of ticks (int) when reached, the timer restarts itself. This is not a number of seconds but a value of max elapsed timers. For example, if interval is 500 milliseconds while maxTicks is 6, the timer will restart itself after 3000 milliseconds (500 x 6).
-interval: int (immutable): interval in milliseconds. This values would be passed to setInterval().
-updateProps(interval: number, maxTicks: number) -> Updates interval and maxTicks. Client code must first exit the currently running timer, call updateProps() and then restart the timer with updated values.
-Return values:
+This is a basic example of a timer. This timer will run indefinitely every 1000 milliseconds (every second). ``Timer`` component will render
+only once and will not render for every elapsed timer (for every second). For now, ignore ``maxTicks`` option. I will cover that later on.
+So how is this usable? Let's expand on this example.
 
-restart(): void -> restarts the timer but does not exit.
-exit(): void -> exists the timer and returns to its initial state (but without the timer running).
-current(): int -> returns the current elapsed time of the timer
-info() -> return the info of the timer. This info is for the total duration of the timer regardless if it was restarted or exited. It is valid for the current browser session i.e. until the user refreshes the page. 
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+
+function Timer() {
+	useAdvancedInterval({
+        onTick() {
+			
+        },
+        maxTicks: 5,
+        interval: 1000,
+    });
+}
+````
+
+If you pass the `onTick` callback, `onTick` will run for every interval, in our example above every 1000 milliseconds. It is up to you what
+you want to do with this callback. It is up to you what you do with this information. For example, if you simply wish to show how many times
+the counter ran, you can:
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+	
+	useAdvancedInterval({
+		onTick() {
+            setCount(a => a + 1);
+		},
+		maxTicks: 5,
+		interval: 1000,
+	});
+	
+	return <p>{count}</p>;
+}
+````
+
+But what is this ``maxTicks`` option? This option says that the timer will tread repetition of this timer as `elapsed` every five times the timer
+repeats. It the example above, that is every five seconds (5000 milliseconds). We can use this with the `onElapsed` callback.
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+	
+	useAdvancedInterval({
+        onElapsed() {
+			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
+			setCount(0);
+        },
+		onTick() {
+            setCount(a => a + 1);
+		},
+		maxTicks: 5,
+		interval: 1000,
+	});
+	
+	return <p>{count}</p>;
+}
+````
+
+As you can see, it is fairly easy to create reusable timers with a couple of lines of code and control how your component is rendered. In the
+example above, `Timer` is only rendered when `setState` is called, not for the 'ticking' of the timer. 
+
+If you want to stop the timer, you can use the `exit` return argument:
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+
+	const [exit] = useAdvancedInterval({
+		onElapsed() {
+			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
+			setCount(0);
+		},
+        onExit() {
+		    // onExit is called when timer is finished. In this case after the callback
+            // to setTimeout() is called after ten seconds.      
+        },
+		onTick() {
+			setCount(a => a + 1);
+		},
+		maxTicks: 5,
+		interval: 1000,
+	});
+
+	useEffect(() => {
+		setTimeout(() => {
+			exit();
+        }, 10000);
+    }, [])
+
+	return <p>{count}</p>;
+}
+````
+
+Above timer will stop after ten seconds and you can react to it in the `onExit` callback. But this timer is still usable. If your UI needs to
+run the timer even after you exit, you can ``restart`` it.
+
+````typescript jsx
+import useAdvancedInterval from 'advanced-interval';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+
+	const [exit, restart] = useAdvancedInterval({
+		onElapsed() {
+			console.log('The timer elapsed. 5 seconds have passed. I will reset the counter!');
+			setCount(0);
+		},
+        onExit() {
+		    // onExit is called when timer is finished. In this case after the callback
+            // to setTimeout() is called after ten seconds.      
+        },
+        onRestart() {
+			// onRestart() is called when restart() function is called. 
+        },
+		onTick() {
+			setCount(a => a + 1);
+		},
+		maxTicks: 5,
+		interval: 1000,
+	});
+
+	useEffect(() => {
+		setTimeout(() => {
+			exit();
+        }, 10000);
+		
+		setTimeout(() => {
+			restart();
+        }, 12000)
+    }, [])
+
+	return <p>{count}</p>;
+}
+````
+
+This timer will stop working after ten seconds but will again start working after twelve seconds like nothing had happened. If you read the introduction
+and the example I had, when the user answered the question for example, two seconds before the timer elapsed, I would load the new question and
+restart the timer again in the same component. 
