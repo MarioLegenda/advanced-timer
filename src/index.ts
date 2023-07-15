@@ -1,5 +1,25 @@
 import {useCallback, useEffect, useRef} from 'react';
 
+interface UseMultipleTimers {
+	intervals: {
+		name: string;
+		maxTicks: number;
+		interval: number;
+	}[];
+	onTick?(name: string): void;
+	onExit?(name: string): void;
+	onElapsed?(name: string): void;
+	onRestart?(name: string): void;
+}
+interface MultipleTimersOption {
+	name: string;
+	maxTicks: number;
+	interval: number;
+	onTick?(name: string): void;
+	onExit?(name: string): void;
+	onElapsed?(name: string): void;
+	onRestart?(name: string): void;
+}
 interface UseAdvancedTimer {
 	maxTicks: number;
 	interval: number;
@@ -15,11 +35,29 @@ interface TimerInfo {
 	numOfExits: number;
 }
 
+interface MultipleTimerInfo {
+	totalTicks: Record<string, number>;
+	numOfRestarts: Record<string, number>;
+	numOfElapsed: Record<string, number>;
+	numOfExits: Record<string, number>;
+}
+
+interface NameValue<T> {
+	[key: string]: {
+		name: string;
+		value: T;
+	}
+}
+
 type VoidFn = () => void;
 type InfoFn = () => TimerInfo;
 type UpdatePropsFn = (interval: number, maxTicks: number) => void;
 
-export default function useAdvancedTimer({
+type VoidWithNameFn = (name: string) => void;
+type InfoWithNameFn = (name: string) => MultipleTimerInfo;
+type UpdatePropsWithNameFn = (name: string, interval: number, maxTicks: number) => void;
+
+export function useAdvancedTimer({
 	onTick,
 	onExit,
 	onElapsed,
@@ -109,7 +147,6 @@ export default function useAdvancedTimer({
 	useEffect(() => {
 		startInterval();
 	}, []);
-
 	/**
 	 * On startup, just in case, clear subscribing interval if an interval is running so we
 	 * have a clean initial state.
@@ -122,4 +159,120 @@ export default function useAdvancedTimer({
 	);
 
 	return [exit, () => restart(true), updateProps, info];
+}
+export function useMultipleTimers(options: UseMultipleTimers): [VoidWithNameFn, VoidWithNameFn, InfoWithNameFn] {
+	/**
+	 * Used to store return value of setInterval() so that it can be cleared but immutable.
+	 */
+	const subscriberRef = useRef<NameValue<NodeJS.Timer>>({});
+	/**
+	 * Holder for maxTicks so that it remains immutable
+	 */
+	const maxTicksRef = useRef<NameValue<number>>({});
+
+	const numOfRestarts = useRef<NameValue<number>>({});
+	const numOfElapsed = useRef<NameValue<number>>({});
+	const numOfExits = useRef<NameValue<number>>({});
+	const totalTicks = useRef<NameValue<number>>({});
+
+	const numOfRepeatsRef = useRef<NameValue<number>>({});
+
+	const sendAsync = useCallback(async (name: string, fn?: VoidWithNameFn) => fn?.(name), []);
+
+	const startInterval = useCallback((name: string, interval: number, onTick?: VoidWithNameFn, onElapsed?: VoidWithNameFn) => {
+		const clear = setInterval(() => {
+			sendAsync(name, onTick);
+			numOfRepeatsRef.current = initAndAssign<number>(numOfRepeatsRef.current, name, (current) => current as number + 1);
+			totalTicks.current = initAndAssign<number>(totalTicks.current, name, () => 0);
+
+			const numOfRepeats = numOfRepeatsRef.current[name];
+			const maxTicks = maxTicksRef.current[name];
+
+			if (numOfRepeats.value === maxTicks.value) {
+				sendAsync(name, onElapsed);
+				numOfElapsed.current = initAndAssign<number>(numOfElapsed.current as NameValue<number>, name, (current) => current as number + 1);
+				numOfRepeatsRef.current = initAndAssign<number>(numOfRepeatsRef.current, name, () => 0);
+			}
+		}, interval);
+
+		subscriberRef.current = initAndAssign<NodeJS.Timer>(subscriberRef.current, name, () => clear);
+	}, [maxTicksRef.current]);
+
+	const restart = useCallback((name: string, callOnRestart?: boolean) => {
+		if (subscriberRef.current[name]) clearInterval(subscriberRef.current[name].value);
+
+		numOfRepeatsRef.current = initAndAssign<number>(numOfRepeatsRef.current, name, () => 0);
+
+		const option = findOption(name, options.intervals);
+		if (option) {
+			startInterval(option.name, option.interval, options.onTick, options.onElapsed);
+		}
+
+		if (callOnRestart) {
+			sendAsync(name, option?.onRestart);
+			numOfRestarts.current = initAndAssign<number>(numOfRestarts.current as NameValue<number>, name, () => 0);
+		}
+	}, []);
+
+	const exit = useCallback((name: string) => {
+		if (subscriberRef.current[name]) {
+			clearInterval(subscriberRef.current[name].value);
+			delete subscriberRef.current[name];
+			numOfRepeatsRef.current = initAndAssign<number>(numOfRepeatsRef.current, name, () => 0);
+			numOfExits.current = initAndAssign<number>(numOfExits.current, name, () => 0);
+
+			const option = findOption(name, options.intervals);
+			if (option) {
+				sendAsync(name, option?.onExit);
+			}
+		}
+	}, [subscriberRef.current, numOfExits.current]);
+
+	const info = useCallback((): MultipleTimerInfo => ({
+		numOfElapsed: processInfo(numOfElapsed.current),
+		numOfExits: processInfo(numOfExits.current),
+		numOfRestarts: processInfo(numOfRestarts.current),
+		totalTicks: processInfo(totalTicks.current),
+	}), [numOfRestarts.current, numOfElapsed.current, numOfExits.current, totalTicks.current]);
+
+	useEffect(() => {
+		for (const option of options.intervals) {
+			maxTicksRef.current = initAndAssign<number>(maxTicksRef.current, option.name, () => option.maxTicks);
+		}
+
+		for (const option of options.intervals) {
+			startInterval(option.name, option.interval, options.onTick, options.onElapsed);
+		}
+	}, []);
+
+	return [exit, (name: string) => restart(name, true), info];
+}
+function findOption(name: string, options: MultipleTimersOption[]): MultipleTimersOption | undefined {
+	return options.find(option => option.name === name);
+}
+function initAndAssign<T>(collection: NameValue<T>, name: string, callback: (current: T | null) => T): NameValue<T> {
+	if (!collection[name]) {
+		collection[name] = {
+			name: name,
+			value: callback(null),
+		};
+
+		return collection;
+	}
+
+	const value = collection[name];
+	value.value = callback(value.value);
+
+	return collection;
+}
+function processInfo(value: NameValue<number>): Record<string, number> {
+	const keys = Object.keys(value);
+	const returnObj: Record<string, number> = {};
+
+	for (const key of keys) {
+		const val = value[key];
+		returnObj[val.name] = val.value;
+	}
+
+	return returnObj;
 }

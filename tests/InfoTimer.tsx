@@ -2,7 +2,7 @@
 // @ts-ignore
 import React, {useState} from 'react';
 // eslint-disable-next-line no-restricted-imports
-import useAdvancedTimer from '../src';
+import {useAdvancedTimer} from '../src';
 
 export default function InfoTimer() {
 	const [numOfElapsed, setNumOfElapsed] = useState(0);

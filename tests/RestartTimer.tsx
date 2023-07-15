@@ -2,7 +2,7 @@
 // @ts-ignore
 import React, {useEffect, useState} from 'react';
 // eslint-disable-next-line no-restricted-imports
-import useAdvancedTimer from '../src';
+import {useAdvancedTimer} from '../src';
 
 export default function RestartTimer() {
 	const [exitCalled, setExitCalled] = useState(false);
