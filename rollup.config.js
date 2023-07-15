@@ -12,10 +12,9 @@ export default {
             //It will provide you the sourcemap for debugging
             sourcemap: true,
             strict: false,
+            preserveModules: true,
         },
     ],
-    //Preserve module will generate a transpiled file for every file in your src folder, if set false it will bundle all the code in one file
-    preserveModules: false,
     //Rollup allows a rich set of plugins to be used along side, we are only using one to compile typescript code to JS
     plugins: [typescript({ tsconfig: "./tsconfig.json" })],
     //We will add React and React-dom as externals because our library will use these two packages from its parent
