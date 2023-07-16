@@ -1,14 +1,14 @@
 import {useCallback, useEffect, useRef} from 'react';
 import type {
 	ExitOrRestartFn,
-	InfoWithNameFn,
-	MultipleTimerInfo, MultipleTimersOption,
+	InfoWithNameFn, MultipleTimerInfo, MultipleTimersOption,
 	NameValue,
+	UpdatePropsWithNameFn,
 	UseMultipleTimers,
 	VoidWithNameFn
 } from './types';
 
-export function useMultipleTimers(options: UseMultipleTimers): [ExitOrRestartFn, ExitOrRestartFn, InfoWithNameFn] {
+export function useMultipleTimers(options: UseMultipleTimers): [ExitOrRestartFn, ExitOrRestartFn, UpdatePropsWithNameFn, InfoWithNameFn] {
 	const immutableOptions = useRef<UseMultipleTimers | null>(null);
 	const subscriberRef = useRef<NameValue<NodeJS.Timer>>({});
 	const maxTicksRef = useRef<NameValue<number>>({});
@@ -108,12 +108,18 @@ export function useMultipleTimers(options: UseMultipleTimers): [ExitOrRestartFn,
 		totalTicks: processInfo(totalTicks.current),
 	}), [numOfRestarts.current, numOfElapsed.current, numOfExits.current, totalTicks.current]);
 
-	/*	const updateProps = useCallback((name: string, interval: number, maxTicks: number) => {
-		if (subscriberRef.current) throw new Error('Props cannot be updated while the timer is running. Call exit() before this function and then restart() after it.');
-
-		intervalRef.current = interval;
-		maxTicksRef.current = maxTicks;
-	}, [subscriberRef.current]);*/
+	const updateProps = useCallback((name: string, interval: number, maxTicks: number) => {
+		if (immutableOptions.current && immutableOptions.current.intervals) {
+			const intervals = immutableOptions.current?.intervals;
+			for (const option of intervals) {
+				if (option.name === name) {
+					option.maxTicks = maxTicks;
+					option.interval = interval;
+					break;
+				}
+			}
+		}
+	}, [subscriberRef.current]);
 
 	useEffect(() => run(), [immutableOptions.current]);
 
@@ -123,7 +129,7 @@ export function useMultipleTimers(options: UseMultipleTimers): [ExitOrRestartFn,
 		}
 	}, []);
 
-	return [exit, (name?: string) => restart(name, true), info];
+	return [exit, (name?: string) => restart(name, true), updateProps, info];
 }
 function findOption(name: string, options: MultipleTimersOption[]): MultipleTimersOption | undefined {
 	return options.find(option => option.name === name);
