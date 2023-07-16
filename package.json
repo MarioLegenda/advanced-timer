@@ -1,6 +1,6 @@
 {
   "name": "advanced-react-timer",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Advanced timer functionality for React apps",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,8 @@
   "scripts": {
     "build": "rollup -c --bundleConfigAsCjs",
     "test": "NODE_ENV=test jest tests/",
-    "coverage": "NODE_ENV=test jest tests/ --coverage"
+    "coverage": "NODE_ENV=test jest tests/ --coverage",
+    "publish": "yarn build && npm publish"
   },
   "files": [
     "build",
