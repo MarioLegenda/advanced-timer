@@ -8,7 +8,9 @@ When I started implementing this feature, it became a mush of setIterval(s) and 
 not familiar with what this component should be doing what not know what was going on.
 
 For that reason, I started working on a more generic solution and this package was created. It offers a way to control timers in an intuitive, 
-readable and maintainable way without the dangers of too many renders or forgetting to clear timers. 
+readable and maintainable way without the dangers of too many renders or forgetting to clear timers. It offers two hooks: `useAdvancedTimer` and
+`useMultipleTimers`. The first one gives you a single timer while with the former one, you can create and run multiple named timers and react on
+the events that they create.
 
 # Install
 
@@ -22,8 +24,10 @@ and import
 
 # Usage
 
+## useAdvancedTimer()
+
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 
 function Timer() {
 	useAdvancedTimer({
@@ -38,7 +42,7 @@ only once and will not render for every elapsed timer (for every second). For no
 So how is this usable? Let's expand on this example.
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 
 function Timer() {
     useAdvancedTimer({
@@ -56,7 +60,7 @@ you want to do with this callback. It is up to you what you do with this informa
 the counter ran, you can:
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 import {useState} from 'react';
 
 function Timer() {
@@ -78,7 +82,7 @@ But what is this ``maxTicks`` option? This option says that the timer will tread
 repeats. It the example above, that is every five seconds (5000 milliseconds). We can use this with the `onElapsed` callback.
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 import {useState} from 'react';
 
 function Timer() {
@@ -142,7 +146,7 @@ Above timer will stop after ten seconds and you can react to it in the `onExit` 
 run the timer even after you exit, you can ``restart`` it.
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
@@ -190,7 +194,7 @@ restart the timer again in the same component.
 But what if you want to change the interval in the middle of a running timer? You can do that like this:
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
@@ -232,7 +236,7 @@ updated on the fly.**
 You can access the info of the timer with the ``info()`` function that is returned from the hook.
 
 ````typescript jsx
-import useAdvancedTimer from 'advanced-react-timer';
+import {useAdvancedTimer} from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
@@ -262,10 +266,145 @@ It is very important to know that the information about the timer is cumulative.
 or `updateProps()`. It is counted and collected for the duration of the underlying component and for the duration of the browser session. If the component
 is unmounted or the user refreshes the page, only then is the info reseted to its initial state.
 
+## useMultipleTimers()
+
+This hook works in the same way as `useAdvancedTimer` but offers you the ability to create multiple timers that you can react to. 
+
+````typescript jsx
+import {useMultipleTimers} from 'advanced-react-timer';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [count, setCount] = useState(0);
+
+	const [info] = useMultipleTimers({
+        intervals: [
+			{
+				name: 'one',
+                maxTicks: 5,
+                interval: 1000,
+            },
+			{
+				name: 'two',
+                maxTicks: 3,
+                interval: 100,
+            },
+			{
+				name: 'three',
+                maxTicks: 5,
+                interval: 2000,
+            }
+        ],
+        onTick(name) {
+			console.log(name);
+        },
+        onElapsed(name) {
+			console.log(name);
+        }
+    });
+
+	return <p>{count}</p>;
+}
+````
+
+As you can see, the API for this function is almost identical to `useAdvancedInterval` but it offers you the name of the interval to react
+to. Also, if you want to restart, exit or update props of any interval, those options are named so you can restart a single named interval but keep
+the rest of them running as is. You can also `exit()` from an interval but keep the rest of them running. Below, you can see the full
+example:
+
+````typescript jsx
+import {useMultipleTimers} from 'advanced-react-timer';
+import {useEffect, useState} from 'react';
+
+function Timer() {
+	const [exit, restart, updateProps, info] = useMultipleTimers({
+		intervals: [
+			{
+				name: 'one',
+				maxTicks: 5,
+				interval: 500,
+			},
+			{
+				name: 'two',
+				maxTicks: 5,
+				interval: 1000,
+			},
+			{
+				name: 'three',
+				maxTicks: 5,
+				interval: 100,
+			},
+			{
+				name: 'four',
+				maxTicks: 5,
+				interval: 2000,
+			},
+		],
+		onTick(name: string) {
+			//console.log(name);
+		},
+		onElapsed(name: string) {
+			console.log(name);
+		}
+	});
+
+	useEffect(() => {
+		setTimeout(() => {
+			exit('three');
+			console.log('EXITED THREE');
+		}, 20000);
+
+		setTimeout(() => {
+			exit();
+			console.log('EXIT ALL');
+		}, 35000);
+
+		setTimeout(() => {
+			console.log('RESTARTING');
+			restart();
+		}, 40000);
+
+		setTimeout(() => {
+			console.log('EXITING ALL AND CHANGING PROPS FOR THREE');
+			exit();
+			updateProps('three', 3000, 5);
+			restart();
+		}, 50000);
+	}, []);
+	
+	return null;
+}
+````
+
 # API
 
 ````typescript
-interface UseAdvancedTimer {
+useAdvancedTimer(options: UseAdvancedTimer): [VoidFn, VoidFn, UpdatePropsFn, InfoFn]
+useMultipleTimers(options: UseMultipleTimers): [ExitOrRestartFn, ExitOrRestartFn, UpdatePropsWithNameFn, InfoWithNameFn]
+````
+
+````typescript
+export interface UseMultipleTimers {
+	intervals: {
+		name: string;
+		maxTicks: number;
+		interval: number;
+	}[];
+	onTick?(name: string): void;
+	onExit?(name: string): void;
+	onElapsed?(name: string): void;
+	onRestart?(name: string): void;
+}
+export interface MultipleTimersOption {
+	name: string;
+	maxTicks: number;
+	interval: number;
+	onTick?(name: string): void;
+	onExit?(name: string): void;
+	onElapsed?(name: string): void;
+	onRestart?(name: string): void;
+}
+export interface UseAdvancedTimer {
 	maxTicks: number;
 	interval: number;
 	onTick?(): void;
@@ -273,17 +412,33 @@ interface UseAdvancedTimer {
 	onElapsed?(): void;
 	onRestart?(): void;
 }
-
-interface TimerInfo {
+export interface TimerInfo {
 	totalTicks: number;
 	numOfRestarts: number;
 	numOfElapsed: number;
 	numOfExits: number;
 }
 
-type VoidFn = () => void;
-type InfoFn = () => TimerInfo;
-type UpdatePropsFn = (interval: number, maxTicks: number) => void;
-````
+export interface MultipleTimerInfo {
+	totalTicks: Record<string, number>;
+	numOfRestarts: Record<string, number>;
+	numOfElapsed: Record<string, number>;
+	numOfExits: Record<string, number>;
+}
 
-``useAdvancedTimer(options: useAdvancedTimer): [VoidFn, VoidFn, UpdatePropsFn, InfoFn]``
+export interface NameValue<T> {
+	[key: string]: {
+		name: string;
+		value: T;
+	}
+}
+
+export type VoidFn = () => void;
+export type InfoFn = () => TimerInfo;
+export type UpdatePropsFn = (interval: number, maxTicks: number) => void;
+
+export type VoidWithNameFn = (name: string) => void;
+export type ExitOrRestartFn = (name?: string) => void;
+export type InfoWithNameFn = () => MultipleTimerInfo;
+export type UpdatePropsWithNameFn = (name: string, interval: number, maxTicks: number) => void;
+````
