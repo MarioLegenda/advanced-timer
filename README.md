@@ -275,8 +275,6 @@ import {useMultipleTimers} from 'advanced-react-timer';
 import {useEffect, useState} from 'react';
 
 function Timer() {
-	const [count, setCount] = useState(0);
-
 	const [info] = useMultipleTimers({
         intervals: [
 			{
@@ -303,7 +301,7 @@ function Timer() {
         }
     });
 
-	return <p>{count}</p>;
+    return null;
 }
 ````
 
