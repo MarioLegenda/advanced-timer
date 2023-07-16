@@ -1,2 +1,2 @@
-export * as useAdvanceTimer from './useAdvancedTimer';
-export * as useMultipleTimers from './useMultipleTimers';
+export {useAdvancedTimer} from './useAdvancedTimer';
+export {useMultipleTimers} from './useMultipleTimers';
